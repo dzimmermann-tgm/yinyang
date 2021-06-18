@@ -10,6 +10,12 @@ l2dist(sample1, sample2, samp = FALSE, rancor = 0.05, gridsize = NA)
 \item{sample1}{a vector of probabilties for the support points}
 
 \item{sample2}{a vector of probabilties for the support points}
+
+\item{samp}{noclue}
+
+\item{rancor}{noclue}
+
+\item{gridsize}{noclue}
 }
 \value{
 dist L2 - distance between the two functions estimated by the samples
@@ -18,5 +24,5 @@ dist L2 - distance between the two functions estimated by the samples
 Function that computes the distance between the two functions estimated by the samples
 }
 \examples{
-l2dist(s)
+#l2dist(s)
 }

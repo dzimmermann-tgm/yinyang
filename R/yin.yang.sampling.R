@@ -1,19 +1,40 @@
+#' A method that does stuff
+#'
+#' @param sample_list parameter
+#' @param prior_list parameter
+#' @param algo parameter
+#' @param method parameter
+#' @param prob_old parameter
+#' @param burn.in parameter
+#' @param bw.adj parameter
+#' @param rancor paramete
+#' @param bw.adj parameter
+#' @param rancor parameter
+#' @param neps parameter
+#' @param check parameter
+#' @param nsam parameter
+#'
+#' @return
+#'
+#' @examples
+#'
+#' @export
 yin.yang.sampling<-function(sample_list=NULL,prior_list=NULL,algo="multinom",method='sequential',prob_old="heuristic",burn.in=2500,bw.adj=1,rancor=1,neps=500,check=FALSE,nsam=NULL){
   ## Metropolis Hastings resampling scheme
   ##########################################
   ## sample_list ... list of subset's posterior samples
-  ##                  each element must be a numeric vector of samples from the subset's posterior 
+  ##                  each element must be a numeric vector of samples from the subset's posterior
   ## prior_list  ... list of prior values of the samples' draws
-  ## algo        ... variant of the algorithm 
+  ## algo        ... variant of the algorithm
   ##                 "multinom"  simple Yin Yang algorithm
   ##                 "MH"  MH Yin Yang algorithm
-  ## method      ... method for caluculating the yin yang resampling; 
-  ##                 possible values: 'tree' if number of sample = 2^n; 
+  ## method      ... method for caluculating the yin yang resampling;
+  ##                 possible values: 'tree' if number of sample = 2^n;
   ##                 'sequential' for sequential resampling evaluation
-  ## prob_old    ... probability to draw from the 'old' yin sample; 
+  ## prob_old    ... probability to draw from the 'old' yin sample;
   ##                 if numeric between 0 and 1: (1-prob_old) = probability to draw from the 'new' yang sample
   ##                  either numeric value of probability to draw from the old sample
-  ##                   or method to determine probability to draw from the 'old' yin sample; 
+  ##                   or method to determine probability to draw from the 'old' yin sample;
   ##                 the probability is calculated based on the difference of the variances,
   ##                   "heuristic"   based on samples' variances  (deafult)
   ##                   "exact"   based on simulations to recover exact probabilities
@@ -26,8 +47,8 @@ yin.yang.sampling<-function(sample_list=NULL,prior_list=NULL,algo="multinom",met
   ## check       ... indicator whether one wants to check the merging behaviour, then summaries for each step of merging are displayed
   ## nsam        ... number of samples to produce
   ######################################################################
-  ## Output: 
-  ## list(merged=sam_list_new,acceptance=acceptance) 
+  ## Output:
+  ## list(merged=sam_list_new,acceptance=acceptance)
   ## merged ... either list of merged output samples ('sequential')
   ##            or final merged sample ('tree')
   ## acceptance ... list of acceptance probabilities (for MH Yin Yang)
@@ -42,8 +63,8 @@ yin.yang.sampling<-function(sample_list=NULL,prior_list=NULL,algo="multinom",met
   nprior<-length(prior_list)
   if(nsample!=nprior){
     stop(gettextf("length of sample list %d is not equal length of prior list %d",nsample,nprior, domain = NA))
-  }  
-  if(is.numeric(prob_old)){ 
+  }
+  if(is.numeric(prob_old)){
   if(prob_old<=0||prob_old>=1){
       stop(gettextf("probability for yin sample %d must lie between 0 and 1",prob_old, domain = NA))}else{
         prob_old=max(min(prob_old,0.95),0.05)  # to guarantee switching between the samples
@@ -68,7 +89,7 @@ resampleMH<-function(sample1,sample2,prior1, prior2,prob_old,method,weight=NULL)
     ## ranges of the samples
     ran1<-range(sample1)
     ran2<-range(sample2)
-    ## estimate densities within the full range of both samples 
+    ## estimate densities within the full range of both samples
     ## (min of min to max of maxs)
     dens1<-density((sample1),from=(min(ran2[1],ran1[1])-rancor),to=(max(ran2[2],ran1[2])+rancor),kernel="epanechnikov",n=min(length(sample1),2^15),adjust=bw.adj*2.34/0.9)
     dens2<-density((sample2),from=(min(ran2[1],ran1[1])-rancor),to=(max(ran2[2],ran1[2])+rancor),kernel="epanechnikov",n=min(length(sample1),2^15),adjust=bw.adj*2.34/0.9)
@@ -82,17 +103,17 @@ resampleMH<-function(sample1,sample2,prior1, prior2,prob_old,method,weight=NULL)
     val2in1.y<-dens1$y[val2in1.ind] #posterior12.y
     ## initialise new sample1 as empty vector
     cons_len<-min(len_ss,length(val2in1.x),length(val2in1.x),length(val2in1.x),length(val2in1.x))
-    sam1<-numeric(cons_len+burn.in) 
+    sam1<-numeric(cons_len+burn.in)
     # write out the new prior for the merged sample
     prior<-numeric(cons_len+burn.in)
-    # indicator which sample the last value has been proposed from 
-    ind.sam.old<-sample(2,1)  
+    # indicator which sample the last value has been proposed from
+    ind.sam.old<-sample(2,1)
     # initialise as sample 1 -> problem with acceptance
     # randomly initialise instead
     # indices which value of the chain to propose from sample 1 or 2
-    # go through each chain sequentially 
-    index.1<-1  
-    index.2<-1 
+    # go through each chain sequentially
+    index.1<-1
+    index.2<-1
     ## draw first 'old' value from common part of 1, 2 -> initialisation
     ind.old.1<-1
     ind.old.2<-1
@@ -105,7 +126,7 @@ resampleMH<-function(sample1,sample2,prior1, prior2,prob_old,method,weight=NULL)
     }else{
       ind.old.2<-2
       sam1[1]<-sample2[ind.old.2] #dens2$x[ind.old.2]
-      prior[1]<-prior2[ind.old.2]      
+      prior[1]<-prior2[ind.old.2]
       index.2<-ind.old.2
     }
     ##sample dependent acceptance rate
@@ -126,7 +147,7 @@ resampleMH<-function(sample1,sample2,prior1, prior2,prob_old,method,weight=NULL)
       #         var.yin<-sum((g.yin-exp.full)^2)/cons_len  #cons_len1
       #         var.yang<-sum((g.yang-exp.full)^2)/cons_len  #cons_len2
       #         # calculate weights relative to total variance
-      #         prob_old_1<-var.yin/sum(var.yin,var.yang)  
+      #         prob_old_1<-var.yin/sum(var.yin,var.yang)
       #         prob_old_2<-1-prob_old_1
       #         exp.full<-prob_old_1*exp.yin+prob_old_2*exp.yang
       #       }
@@ -152,8 +173,8 @@ resampleMH<-function(sample1,sample2,prior1, prior2,prob_old,method,weight=NULL)
     for(ind in 1:(cons_len+burn.in)){
       # randomise whether to draw from sample 1 or 2
       # increasing the limit above 0.5  (currently 0.7)
-      # makes the algorithm more conservative in the sense of 
-      # staying closer to 'old' sample (sample 1 or the condensed 
+      # makes the algorithm more conservative in the sense of
+      # staying closer to 'old' sample (sample 1 or the condensed
       # sample of all previous resampling steps)
       if(runif(1)<=prob_old_1){## same sample as before
         ind.sam.new<-1
@@ -169,8 +190,8 @@ resampleMH<-function(sample1,sample2,prior1, prior2,prob_old,method,weight=NULL)
         propprior<-prior2[index.2]
       }
       sum.ind<-(ind.sam.old+2*ind.sam.new-2)
-      ## switch between 4 cases 
-      switch(sum.ind, 
+      ## switch between 4 cases
+      switch(sum.ind,
 {# old=new=1
   logpost<-log(val1in2.y[index.1])-log(val1in2.y[ind.old.1])
   logprio<-log(prior1[ind.old.1])-log(propprior)
@@ -180,13 +201,13 @@ resampleMH<-function(sample1,sample2,prior1, prior2,prob_old,method,weight=NULL)
   logpost<-log(val1in2.y[index.1])-log(val2in1.y[ind.old.2])
   logprio<-log(prior2[ind.old.2])-log(propprior)
   logind<-log(prob_old_1)-log(prob_old_2)
-  accprob<-logpost+logprio#+logind 
+  accprob<-logpost+logprio#+logind
 },
 { # old=1,new=2
   logpost<-log(val2in1.y[index.2])-log(val1in2.y[ind.old.1])
   logprio<-log(prior1[ind.old.1])-log(propprior)
   logind<-log(prob_old_2)-log(prob_old_1)
-  accprob<-logpost+logprio#+logind 
+  accprob<-logpost+logprio#+logind
 },
 { # old=2,new=2
   logpost<-log(val2in1.y[index.2])-log(val2in1.y[ind.old.2])
@@ -203,7 +224,7 @@ if(log(runif(1))<accprob){  ## accept new value
   sam1[ind]<-proposal
   prior[ind]<-propprior
   acceptance<-acceptance+1
-  # update index 
+  # update index
   if(ind.sam.new==1){ind.old.1<-index.1}else{
     ind.old.2<-index.2}
   ind.sam.old<-ind.sam.new
@@ -214,7 +235,7 @@ if(log(runif(1))<accprob){  ## accept new value
       prior[ind]<-prior[ind-1]
     } # for first sample it has already been initialised
   }
-    } 
+    }
 sample.out<-(sam1[!is.na(sam1)])[(burn.in+1):(cons_len+burn.in)]
 
 #if(method=="tree"){
@@ -252,18 +273,18 @@ resampleyinyang<-function(sample1,sample2,prior1,prior2,prob_old,method,weight=N
     # sample 1 over the prior on sample 2
     lw_star2<-log(posterior21.y)-log(prior2)
     lw_star1<-log(posterior12.y)-log(prior1)
-    # cut off values too small or large to get rid of Inf 
+    # cut off values too small or large to get rid of Inf
     # (division by numerical 0)
     lw_star2[is.infinite(lw_star2)]<-sign(lw_star2[is.infinite(lw_star2)])*20
     lw_star1[is.infinite(lw_star1)]<-sign(lw_star1[is.infinite(lw_star1)])*20
     nlw_star2<-pmax(pmin((lw_star2),20),-20)  #-max(lw_star2)
     nlw_star1<-pmax(pmin((lw_star1),20),-20)  #-max(lw_star1)
-    # new weights are calculated from standardised log ratios 
+    # new weights are calculated from standardised log ratios
     # (sum up to 1)
     weights2<-exp(nlw_star2)/sum(exp(nlw_star2) )
     weights1<-exp(nlw_star1)/sum(exp(nlw_star1) )
     #cat(summary(weights),fill=TRUE)
-    ## once we have the weights, we draw from the multinomial distribution 
+    ## once we have the weights, we draw from the multinomial distribution
     ## over sample 1 with weight vector weights
     sample1.new<-rmultinom(1,size=(len_sam),prob=weights2)
     sample2.new<-rmultinom(1,size=(len_sam),prob=weights1)
@@ -272,7 +293,7 @@ resampleyinyang<-function(sample1,sample2,prior1,prior2,prob_old,method,weight=N
     new.sample2<-numeric()
     new.prior1<-numeric()
     new.prior2<-numeric()
-    ### determine probability of yin sample 
+    ### determine probability of yin sample
     if(prob_old=="exact"){
 #       syy.yang=mean(posterior21.y/prior2)
 #       syy.yin=mean(posterior12.y/prior1)
@@ -292,7 +313,7 @@ resampleyinyang<-function(sample1,sample2,prior1,prior2,prob_old,method,weight=N
         var.yin<-sum((g.yin-exp.full)^2)/len_sam  #cons_len1
         var.yang<-sum((g.yang-exp.full)^2)/len_sam  #cons_len2
         # calculate weights relative to total variance
-        prob_old_1<-var.yin/sum(var.yin,var.yang)  
+        prob_old_1<-var.yin/sum(var.yin,var.yang)
         prob_old_2<-1-prob_old_1
         exp.full<-prob_old_1*exp.yin+prob_old_2*exp.yang
       }
@@ -305,13 +326,13 @@ resampleyinyang<-function(sample1,sample2,prior1,prior2,prob_old,method,weight=N
     }
     for(i in 1:(len_sam)){
       if(sample1.new[i]!=0){
-        # repeat each value of vector sample 1 for as many times 
+        # repeat each value of vector sample 1 for as many times
         # as drawn from the multinomial distribution
-        new.sample1<-c(new.sample1,rep(sample1[i],sample1.new[i])) 
+        new.sample1<-c(new.sample1,rep(sample1[i],sample1.new[i]))
         new.prior1<-c(new.prior1,rep(prior1[i],sample1.new[i]))
       }
       if(sample2.new[i]!=0){
-        # repeat each value of vector sample 2 for as many times 
+        # repeat each value of vector sample 2 for as many times
         # as drawn from the multinomial distribution
         new.sample2<-c(new.sample2,rep(sample2[i],sample2.new[i]))
         new.prior2<-c(new.prior2,rep(prior2[i],sample2.new[i]))
@@ -321,7 +342,7 @@ resampleyinyang<-function(sample1,sample2,prior1,prior2,prob_old,method,weight=N
     ind_sam<-(runif((len_sam),min=0,max=1)<prob_old_1)
     sample.out<-c(new.sample1[ind_sam],new.sample2[!ind_sam])
     prior<-c(new.prior1[ind_sam],new.prior2[!ind_sam])
-    #if(method=="tree"){ 
+    #if(method=="tree"){
       return(list(sample.out,prior))
     #}
     #if(method=="sequential"){
@@ -331,10 +352,10 @@ resampleyinyang<-function(sample1,sample2,prior1,prior2,prob_old,method,weight=N
 ### Metropolis-Hastings Yin Yang sampler
 #######################################
 ########################
-## method sequential 
+## method sequential
 if(method=="sequential"){
   ## caluculate sample set weights based on sample variances
-  ## heuristic weights of samples 
+  ## heuristic weights of samples
   if(prob_old=="heuristic"|is.null(prob_old)){
     weights_vec<-numeric(nsample)
     for(j in 1:nsample){
@@ -342,7 +363,7 @@ if(method=="sequential"){
     }
     weights_vec<-weights_vec/sum(weights_vec) #weights sum to 1
   }
-  ## initialise first sample 
+  ## initialise first sample
   sample1<-sample_list[[1]]
   prior1<-prior_list[[1]]
     #prior1<-prior1#[(burn.in+1):length(sample1)]
@@ -399,19 +420,19 @@ if(method=="tree"){
     for(k in (expon):1){ #run through tree
       ### number of samples =2^expon
       ## write out samples in a list for further analysis
-      ## heuristic weights of samples 
+      ## heuristic weights of samples
       if(prob_old=="heuristic"){
         weights_vec<-numeric(length(sam_list_old))
         for(j in 1:length(sam_list_old)){
           weights_vec[j]<-1/var(sam_list_old[[j]]) # Scott et al.
-          #weights_vec[j]<-1/sd(sam_list_old[[j]]) # standard dev. 
+          #weights_vec[j]<-1/sd(sam_list_old[[j]]) # standard dev.
           #weights_vec[j]<-medmed(sam_list_old[[j]]) # robust weights
           ### little difference for symmetric 'Gaussian' cases
         }
         weights_vec<-weights_vec/sum(weights_vec) #weights sum to 1
       }
-      sam_list_new<-list()  
-      prio_list_new<-list()  
+      sam_list_new<-list()
+      prio_list_new<-list()
       if(check){cat(k,fill = TRUE)}
       for(j in seq(1,2^k-1,by=2)){
         if(check){cat(j,fill = TRUE)}
@@ -433,7 +454,7 @@ if(method=="tree"){
             if(check){cat(summary(resam[[1]]),fill = TRUE)}
             sam_list_new<-c(sam_list_new,list(resam[[1]]))
             prio_list_new<-c(prio_list_new,list(resam[[2]]))
-        } 
+        }
         if(algo=="MH"){
             resam<-resampleMH(sample1,sample2,prior1,prior2,prob_old,method,weight=c(weights_vec[k-1],weights_vec[k]))
             if(check){cat(summary(resam[[1]]),fill = TRUE)}

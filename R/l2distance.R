@@ -4,15 +4,12 @@
 #' @param sample2 a vector of probabilties for the support points
 #' @param samp noclue
 #' @param rancor noclue
-#' @param rancor noclue
+#' @param gridsize noclue
 #'
 #' @return dist L2 - distance between the two functions estimated by the samples
 #' @examples
 #' #l2dist(s)
 #' @export
-
-
-
 l2dist<-function(sample1, sample2, samp=FALSE,rancor=0.05,gridsize=NA){
   l2distance<-function(sample1, sample2){
     ############################
